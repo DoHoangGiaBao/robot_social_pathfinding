@@ -7,27 +7,17 @@ import xacro
 
 def generate_launch_description():
     pkg = get_package_share_directory('my_robot_description')
-    pkg_share = pkg  # same reference, no need to call twice
+    pkg_share = pkg
 
-    # 1. Process the xacro into a URDF string
     xacro_file = os.path.join(pkg, 'robot_description', 'robot.urdf.xacro')
     robot_description = xacro.process_file(xacro_file).toxml()
     rviz_config_file = os.path.join(pkg, 'rviz', 'my_robot.rviz')
 
-    # -------------------------------------------------------------------------
-    # 2. Start Gazebo — launched first so it begins publishing /clock ASAP
-    # -------------------------------------------------------------------------
     gz_sim = ExecuteProcess(
         cmd=['gz', 'sim', os.path.join(pkg, 'worlds', 'maze_world.sdf')],
         output='screen'
     )
 
-    # -------------------------------------------------------------------------
-    # 3. Clock bridge — started immediately after Gazebo so /clock reaches ROS
-    #    before RSP tries to publish fixed-joint transforms.
-    #    Keeping this separate from the main bridge ensures /clock is available
-    #    even if the main bridge is delayed.
-    # -------------------------------------------------------------------------
     clock_bridge = Node(
         package='ros_gz_bridge',
         executable='parameter_bridge',
@@ -36,13 +26,6 @@ def generate_launch_description():
         output='screen'
     )
 
-    # -------------------------------------------------------------------------
-    # 4. Robot State Publisher
-    #    - use_sim_time: True  → RSP honours /clock for its own stamps
-    #    - ignore_timestamp: True → RSP keeps re-broadcasting fixed joints at
-    #      publish_frequency Hz instead of going silent after the first t=0
-    #      publish. This is the key fix for chassis/sensors showing 0.0.
-    # -------------------------------------------------------------------------
     rsp = Node(
         package='robot_state_publisher',
         executable='robot_state_publisher',
@@ -51,14 +34,10 @@ def generate_launch_description():
             'robot_description': robot_description,
             'use_sim_time': True,
             'publish_frequency': 50.0,
-            'ignore_timestamp': True,   # <-- FIX: keeps fixed joints alive
+            'ignore_timestamp': True,
         }]
     )
 
-    # -------------------------------------------------------------------------
-    # 5. Spawn robot — delayed 3 s to give Gazebo time to fully load the world
-    #    before we try to insert the robot model.
-    # -------------------------------------------------------------------------
     spawn = Node(
         package='ros_gz_sim',
         executable='create',
@@ -73,31 +52,28 @@ def generate_launch_description():
         output='screen'
     )
 
-    # -------------------------------------------------------------------------
-    # 6. Main sensor/control bridge (everything except /clock)
-    #    /clock is handled by clock_bridge above to guarantee early availability.
-    # -------------------------------------------------------------------------
     bridge = Node(
         package='ros_gz_bridge',
         executable='parameter_bridge',
         name='main_bridge',
         arguments=[
             '/cmd_vel@geometry_msgs/msg/Twist]gz.msgs.Twist',
-            '/model/my_robot/odometry@nav_msgs/msg/Odometry[gz.msgs.Odometry', # Ensure this matches GZ topic
+            '/model/my_robot/odometry@nav_msgs/msg/Odometry[gz.msgs.Odometry',
             '/world/maze_world/model/my_robot/joint_state@sensor_msgs/msg/JointState[gz.msgs.Model',
             '/scan@sensor_msgs/msg/LaserScan[gz.msgs.LaserScan',
             '/imu@sensor_msgs/msg/Imu[gz.msgs.IMU',
+            '/camera@sensor_msgs/msg/Image[gz.msgs.Image',
+            '/camera_info@sensor_msgs/msg/CameraInfo[gz.msgs.CameraInfo',
         ],
         remappings=[
             ('/model/my_robot/odometry', '/odom'),
             ('/world/maze_world/model/my_robot/joint_state', '/joint_states'),
+            ('/camera', '/camera/image_raw'),
+            ('/camera_info', '/camera/camera_info'),
         ],
         output='screen'
     )
 
-    # -------------------------------------------------------------------------
-    # 7. EKF — fuses /odom + /imu into odom → base_link TF
-    # -------------------------------------------------------------------------
     ekf_node = Node(
         package='robot_localization',
         executable='ekf_node',
@@ -109,9 +85,6 @@ def generate_launch_description():
         ]
     )
 
-    # -------------------------------------------------------------------------
-    # 8. RViz
-    # -------------------------------------------------------------------------
     rviz = Node(
         package='rviz2',
         executable='rviz2',
@@ -139,20 +112,55 @@ def generate_launch_description():
         output='screen',
         parameters=[{
             'use_sim_time': True,
-            'autostart': True,               # ← automatically configure + activate
-            'node_names': ['slam_toolbox'],  # ← must match the node's name
+            'autostart': True,
+            'node_names': ['slam_toolbox'],
             'bond_timeout': 4.0,
         }]
     )
 
+
+    human_detector = Node(
+        package='my_robot_description',
+        executable='human_node',
+        name='human_detector',
+        output='screen',
+        parameters=[{'use_sim_time': True}]
+    )
+
+    human_fusion = Node(
+        package='my_robot_description',
+        executable='human_fusion',
+        name='human_fusion',
+        output='screen',
+        parameters=[{'use_sim_time': True}]
+    )
+
+    social_costmap = Node(
+        package='my_robot_description',
+        executable='social_costmap',
+        name='social_costmap',
+        output='screen',
+        parameters=[{'use_sim_time': True}]
+    )
+
     delayed_nodes = TimerAction(
         period=5.0,
-        actions=[spawn, bridge, ekf_node, rviz, slam_toolbox, lifecycle_manager]
+        actions=[
+            spawn,
+            bridge,
+            ekf_node,
+            rviz,
+            slam_toolbox,
+            lifecycle_manager,
+            human_detector,   
+            human_fusion,     
+            social_costmap,   
+        ]
     )
 
     return LaunchDescription([
-        gz_sim,         # 1. Gazebo first
-        clock_bridge,   # 2. /clock bridge immediately — RSP needs this
-        rsp,            # 3. RSP immediately — now has clock, ignore_timestamp keeps it alive
-        delayed_nodes,  # 4. Everything else after 3 s
+        gz_sim,
+        clock_bridge,
+        rsp,
+        delayed_nodes,
     ])

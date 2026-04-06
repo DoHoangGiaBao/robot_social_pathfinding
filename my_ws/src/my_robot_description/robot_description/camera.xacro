@@ -24,6 +24,7 @@
     </xacro:inertial_box>
   </link>
 
+
   <joint name="camera_optical_joint" type="fixed">
     <parent link="camera_link"/>
     <child link="camera_link_optical"/>
@@ -32,9 +33,10 @@
 
   <link name="camera_link_optical"/>
 
+
   <gazebo reference="camera_link">
     <sensor name="camera" type="camera">
-      <pose relative_to="camera_link_optical">0 0 0 0 -1.5708 -1.5708</pose>
+      <pose>0 0 0 0 0 0</pose>
       <topic>camera</topic>
       <update_rate>30</update_rate>
       <camera>

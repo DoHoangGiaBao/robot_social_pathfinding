@@ -11,7 +11,6 @@ setup(
     data_files=[
         ('share/ament_index/resource_index/packages', ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
-        # ↓ These two lines are critical — without them, launch/worlds/xacro won't be found
         (os.path.join('share', package_name, 'launch'), glob('launch/*.py')),
         (os.path.join('share', package_name, 'robot_description'), glob('robot_description/*.xacro')),
         (os.path.join('share', package_name, 'worlds'), glob('worlds/*')),
@@ -31,6 +30,9 @@ setup(
     },
     entry_points={
         'console_scripts': [
+            'human_node = my_robot_description.human_node:main',
+            'human_fusion = my_robot_description.human_fusion_node:main',
+            'social_costmap = my_robot_description.social_costmap_node:main',
         ],
     },
 )
