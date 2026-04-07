@@ -158,9 +158,15 @@ def generate_launch_description():
         ]
     )
 
+    delayed_nodes_2 = TimerAction(
+        period=3.0,
+        actions=[ekf_node, rviz, slam_toolbox, lifecycle_manager]
+    )
+
     return LaunchDescription([
-        gz_sim,
-        clock_bridge,
-        rsp,
-        delayed_nodes,
+        gz_sim,         # 1. Gazebo first
+        clock_bridge,   # 2. /clock bridge immediately — RSP needs this
+        rsp,            # 3. RSP immediately — now has clock, ignore_timestamp keeps it alive
+        delayed_nodes_2,  
+        delayed_nodes,  # 4. Everything else after 3 s
     ])

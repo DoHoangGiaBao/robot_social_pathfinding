@@ -15,12 +15,14 @@ ekf_filter_node:
     # Odom0: Wheel Encoders from Gazebo
     odom0: /odom
     # [x, y, z, roll, pitch, yaw, vx, vy, vz, vroll, vpitch, vyaw, ax, ay, az]
-    odom0_config: [true,  false,  false,  # Position X, Y
+    odom0_config: [false,  false,  false,  # Position X, Y
                    false, false, false,
                    true,  false, false, # Fuse X velocity, but NOT Y velocity
                    false, false, true,  # Fuse Yaw velocity
                    false, false, false]
     odom0_differential: false
+    odom0_relative: false
+    odom0_queue_size: 10
 
     # Imu0: IMU from Gazebo
     imu0: /imu
@@ -28,8 +30,9 @@ ekf_filter_node:
     imu0_config: [false, false, false,
                   false, false, true,
                   false, false, false,
-                  false, false, true,
+                  false, false, false,
                   false,  false, false]
 
-    imu0_differential: true
+    imu0_differential: false
     imu0_remove_gravitational_acceleration: true
+    imu0_queue_size: 10

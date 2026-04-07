@@ -1,3 +1,5 @@
+import math
+
 import rclpy
 from rclpy.node import Node
 from nav_msgs.msg import OccupancyGrid, Path
@@ -26,19 +28,20 @@ class PlannerNode(Node):
 
     def get_robot_pose(self):
         try:
-            # Using rclpy.time.Time() with NO arguments is the 
-            # most reliable way to get "Latest Available" in ROS 2.
             trans = self.tf_buffer.lookup_transform(
-                'map', 
-                'base_link', 
-                rclpy.time.Time(), # Latest available
-                timeout=rclpy.duration.Duration(seconds=0.5)) # Longer timeout
+                'map', 'base_link', rclpy.time.Time(), timeout=rclpy.duration.Duration(seconds=0.5))
+            
+            # Extract quaternion
+            q = trans.transform.rotation
+            # Convert quaternion to yaw
+            siny_cosp = 2 * (q.w * q.z + q.x * q.y)
+            cosy_cosp = 1 - 2 * (q.y * q.y + q.z * q.z)
+            yaw = math.atan2(siny_cosp, cosy_cosp)
             
             return (trans.transform.translation.x, 
                     trans.transform.translation.y, 
-                    0.0)
+                    yaw) # Pass the real yaw!
         except Exception as e:
-            # If TF fails, we can't plan.
             self.get_logger().info(f'TF lookup failing: {e}')
             return None
 

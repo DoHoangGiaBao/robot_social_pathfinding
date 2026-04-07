@@ -12,7 +12,7 @@ slam_toolbox:
     max_laser_range: 20.0
 
     minimum_time_interval: 0.3    # ← throttle to ~3 scans/sec for matching
-    transform_timeout: 0.5        # ← tighten; 1.0 s is too loose
+    transform_timeout: 1.0        # ← tighten; 1.0 s is too loose
     tf_buffer_duration: 30.0
     stack_size_to_use: 40000000
     map_update_interval: 1.0      # ← update map more frequently
