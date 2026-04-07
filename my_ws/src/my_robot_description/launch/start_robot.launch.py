@@ -148,10 +148,6 @@ def generate_launch_description():
         actions=[
             spawn,
             bridge,
-            ekf_node,
-            rviz,
-            slam_toolbox,
-            lifecycle_manager,
             human_detector,   
             human_fusion,     
             social_costmap,   
