@@ -2,10 +2,18 @@ import rclpy
 from rclpy.node import Node
 from std_msgs.msg import Int32MultiArray
 from nav_msgs.msg import OccupancyGrid
+from rclpy.qos import QoSProfile, DurabilityPolicy, ReliabilityPolicy, HistoryPolicy
 
 import numpy as np
 import math
 
+# ── QoS profile that matches map_server / RViz2 Map plugin ────────────────
+MAP_QOS = QoSProfile(
+    reliability=ReliabilityPolicy.RELIABLE,
+    durability=DurabilityPolicy.TRANSIENT_LOCAL,
+    history=HistoryPolicy.KEEP_LAST,
+    depth=1,
+)
 
 class SocialCostmap(Node):
     def __init__(self):
@@ -31,7 +39,7 @@ class SocialCostmap(Node):
         self.pub = self.create_publisher(
             OccupancyGrid,
             '/social_costmap',
-            10
+            MAP_QOS,
         )
 
         # Map params — sẽ được cập nhật từ /map

@@ -105,6 +105,13 @@ def generate_launch_description():
         ]
     )
 
+    global_costmap_node = Node(
+        package='my_robot_description',
+        executable='global_costmap',
+        name='global_costmap',
+        output='screen'
+    )
+
     lifecycle_manager = Node(
         package='nav2_lifecycle_manager',
         executable='lifecycle_manager',
@@ -156,7 +163,7 @@ def generate_launch_description():
 
     delayed_nodes_2 = TimerAction(
         period=3.0,
-        actions=[ekf_node, rviz, slam_toolbox, lifecycle_manager]
+        actions=[ekf_node, rviz, slam_toolbox, global_costmap_node, lifecycle_manager]
     )
 
     return LaunchDescription([

@@ -9,10 +9,12 @@ Panels:
         - /LaserScan1
         - /PointCloud21
         - /Map1
+        - /SocialCostmap1
+        - /GlobalCostmap1
         - /Camera1
         - /Path1
       Splitter Ratio: 0.5
-    Tree Height: 491
+    Tree Height: 700
 Visualization Manager:
   Class: ""
   Displays:
@@ -248,6 +250,8 @@ Visualization Manager:
       Use Fixed Frame: true
       Use rainbow: true
       Value: true
+
+    # ── Base occupancy map (static or SLAM) ───────────────────────────────
     - Alpha: 0.699999988079071
       Binary representation: false
       Binary threshold: 100
@@ -257,8 +261,8 @@ Visualization Manager:
       Enabled: true
       Name: Map
       Topic:
-        Depth: 5
-        Durability Policy: Volatile
+        Depth: 1
+        Durability Policy: Transient Local
         Filter size: 10
         History Policy: Keep Last
         Reliability Policy: Reliable
@@ -271,6 +275,62 @@ Visualization Manager:
         Value: /map_updates
       Use Timestamp: false
       Value: true
+
+    # ── Social costmap — human proximity costs ────────────────────────────
+    # FIX: Added this display (was missing entirely).
+    # Uses Transient Local to match the fixed publisher QoS.
+    # Color scheme "costmap" renders low cost as blue, high cost as red.
+    - Alpha: 0.5
+      Binary representation: false
+      Binary threshold: 100
+      Class: rviz_default_plugins/Map
+      Color Scheme: costmap
+      Draw Behind: false
+      Enabled: true
+      Name: SocialCostmap
+      Topic:
+        Depth: 1
+        Durability Policy: Transient Local
+        Filter size: 10
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /social_costmap
+      Update Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /social_costmap_updates
+      Use Timestamp: false
+      Value: true
+
+    # ── Global costmap — merged static + social layer ─────────────────────
+    # FIX: Added this display (was missing entirely).
+    # This is what the planner actually uses — useful for debugging.
+    - Alpha: 0.4
+      Binary representation: false
+      Binary threshold: 100
+      Class: rviz_default_plugins/Map
+      Color Scheme: costmap
+      Draw Behind: false
+      Enabled: true
+      Name: GlobalCostmap
+      Topic:
+        Depth: 1
+        Durability Policy: Transient Local
+        Filter size: 10
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /global_costmap
+      Update Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /global_costmap_updates
+      Use Timestamp: false
+      Value: true
+
     - Class: rviz_default_plugins/Camera
       Enabled: true
       Far Plane Distance: 100
@@ -288,12 +348,17 @@ Visualization Manager:
         Grid: true
         LaserScan: true
         Map: true
+        SocialCostmap: true
+        GlobalCostmap: true
         Path: true
         PointCloud2: true
         RobotModel: true
         TF: true
         Value: true
       Zoom Factor: 1
+
+    # ── Planned path from Hybrid A* ───────────────────────────────────────
+    # FIX: topic was /path — planner publishes to /planned_path
     - Alpha: 1
       Buffer Length: 1
       Class: rviz_default_plugins/Path
@@ -303,7 +368,7 @@ Visualization Manager:
       Head Length: 0.20000000298023224
       Length: 0.30000001192092896
       Line Style: Lines
-      Line Width: 0.029999999329447746
+      Line Width: 0.05
       Name: Path
       Offset:
         X: 0
@@ -320,8 +385,9 @@ Visualization Manager:
         Filter size: 10
         History Policy: Keep Last
         Reliability Policy: Reliable
-        Value: /path
+        Value: /planned_path
       Value: true
+
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
@@ -342,7 +408,7 @@ Visualization Manager:
         Durability Policy: Volatile
         History Policy: Keep Last
         Reliability Policy: Reliable
-        Value: goal_pose
+        Value: /goal_pose
   Transformation:
     Current:
       Class: rviz_default_plugins/TF

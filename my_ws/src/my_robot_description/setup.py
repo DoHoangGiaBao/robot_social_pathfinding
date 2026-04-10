@@ -33,6 +33,7 @@ setup(
             'human_node = my_robot_description.human_node:main',
             'human_fusion = my_robot_description.human_fusion_node:main',
             'social_costmap = my_robot_description.social_costmap_node:main',
+            'global_costmap = my_robot_description.global_costmap_node:main',
         ],
     },
 )
