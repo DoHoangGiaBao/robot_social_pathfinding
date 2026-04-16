@@ -23,8 +23,8 @@ def generate_launch_description():
     # This node listens to the /planned_path and sends /cmd_vel to the robot
     controller_node = Node(
         package='hybrid_astar_planner',
-        executable='pure_pursuit',
-        name='pure_pursuit_controller',
+        executable='teb_controller',
+        name='teb_controller',
         output='screen',
         parameters=[{'use_sim_time': use_sim_time}]
     )

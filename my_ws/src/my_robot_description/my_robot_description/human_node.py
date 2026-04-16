@@ -26,7 +26,7 @@ class HumanDetector(Node):
         )
 
         self.bridge = CvBridge()
-        self.model = YOLO("/home/vatcraft/yolov8n.pt")
+        self.model = YOLO("/home/nga/yolov8n.pt")
 
         self.latest_frame = None
         self.lock = threading.Lock()

@@ -29,6 +29,7 @@ setup(
         'console_scripts': [
             'planner_node      = hybrid_astar_planner.planner_node:main',
             'pure_pursuit      = hybrid_astar_planner.pure_pursuit:main',
+            'teb_controller = hybrid_astar_planner.teb_controller:main',
         ],
     },
 )
